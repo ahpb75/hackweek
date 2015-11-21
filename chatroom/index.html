@@ -1,0 +1,238 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>CS4830 | HackChat</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!--[if lte IE 8]><script src="assets/js/ie/html5shiv.js"></script><![endif]-->
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<!--[if lte IE 8]><link rel="stylesheet" href="assets/css/ie8.css" /><![endif]-->
+		<!--[if lte IE 9]><link rel="stylesheet" href="assets/css/ie9.css" /><![endif]-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>  
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" integrity="sha384-aUGj/X2zp5rLCbBxumKTCw2Z50WgIr1vs/PFN4praOTvYXWlVyh2UtNUU0KAUhAX" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+textarea:focus, input:focus {
+    color: #000;
+}
+
+input, select, textarea{
+    color: #000;
+}
+</style>
+	</head>
+	<body onload="initGeolocation();">
+
+		<!-- Header -->
+			<div id="header">
+
+				<div class="top">
+
+					<!-- Info -->
+						<div id="logo">
+							<span class="image avatar48"><img src="assets/images/chat.png" alt="" /></span>
+							<h1 id="title">HackChat</h1>
+							<p>CS4830 Hackweek</p>
+							
+							
+							<hr>
+							<center><h6>Message Center:</h6></center>
+						</div>
+
+					<!-- Messages-->
+						<nav id="nav">
+    						<center><ul id="messages"></ul></center>
+						</nav>
+
+				</div>
+
+				<div class="bottom">
+
+					<hr>
+					<br>
+						  <form action="">
+      						<center><input id="m" class="10u" autocomplete="off" placeholder="Enter Message Here!"/></center>
+      						<br>
+      					   <center><button class="7u">Send Message</button></center>
+    					  </form>
+    					  <br/>
+    					  
+
+				</div>
+
+			</div>
+
+		<!-- Main -->
+			<div id="main">
+
+
+				<!-- Map Area -->
+					<section id="about" class="three">
+						<div class="container">
+
+							<header>
+								<h2>User Locations</h2>
+								<center><h5>Number of Users: <span id='usercount'></span></h5></center>
+							</header>
+
+							<div id="map_canvas" style="width:700;height:300px;margin:auto"></div>    </div>
+
+							<p>View chat room user locations in the Google Map above.</p>
+							<p>Chat Room Activity:</p>
+							<center><ul id="userinfo"></ul></center>
+
+						</div>
+					</section>
+
+
+			</div>
+
+		<!-- Footer -->
+			<div id="footer">
+
+				<!-- Copyright -->
+					<ul class="copyright">
+						<li>&copy; CS 4830 Hack Week. | Xuan Ding	|	Yohanes Handrianto	|	Xueyan Wu	|	Andrew Peth</li>
+					</ul>
+
+			</div>
+      </body>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/jquery.scrollzer.min.js"></script>
+			<script src="assets/js/skel.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
+			<script src="assets/js/main.js"></script>
+
+	<!--############### Google Map, Chat, and Socket.io Scripts ##################### -->
+
+				<script src="/socket.io/socket.io.js"></script>
+	<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+        <script src="http://code.jquery.com/jquery-1.11.1.js"></script>	
+	<script async defer
+        src="https://maps.googleapis.com/maps/api/js?callback=initMap"></script>
+  <script>
+  var socket = io();
+     var coords;
+     var fix;
+var myLatLng = {lat: -25.363, lng: 131.044};
+var s = {lat: -25, lng:131};
+var pos='s';
+var map;
+  function initMap() {
+  map = new google.maps.Map(document.getElementById('map_canvas'), {
+    center: {lat: -34.397, lng: 150.644},
+    zoom: 12
+  });
+  var infoWindow = new google.maps.InfoWindow({map: map});
+
+  // Try HTML5 geolocation.
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+       pos = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+
+// console.log(pos);
+socket.emit('location',pos);
+      // infoWindow.setPosition(pos);
+      // infoWindow.setContent('Location found.');
+      map.setCenter(pos);
+      var marker = new google.maps.Marker({
+    position: pos,
+    map: map,
+    title: 'Hello World!',
+    animation:google.maps.Animation.BOUNCE
+  });
+    }, function() {
+      handleLocationError(true, infoWindow, map.getCenter());
+    });
+  } else {
+    // Browser doesn't support Geolocation
+    handleLocationError(false, infoWindow, map.getCenter());
+  }
+}
+      
+// console.log(pos);
+function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+  infoWindow.setPosition(pos);
+  infoWindow.setContent(browserHasGeolocation ?
+                        'Error: The Geolocation service failed.' :
+                        'Error: Your browser doesn\'t support geolocation.');
+}
+ 
+
+
+    
+    
+
+    
+    // initMap();
+    
+    // console.dir(pos);
+    // socket.emit('location',pos);
+    // console.dir(pos.toString());
+
+    $('form').submit(function(){
+    var today = new Date();
+    var hh = today.getHours();
+    var mm = today.getMinutes(); //January is 0!
+    var ss = today.getSeconds();
+
+    today = hh+':'+mm+':'+ss;
+        socket.emit('chat message', today + " " + $('#m').val());
+        $('#m').val('');
+	socket.emit('location',pos);
+        return false;
+    });
+
+  socket.on('chat message', function(msg){
+    $('#messages').append($('<li>').text(msg));
+  });
+
+  socket.on('userCount',function(msg){
+    $('#usercount').text(msg.userCount);
+  });
+
+  socket.on('newuser',function(msg){
+          $('#userinfo').append($('<li>').text(msg.msg));
+  });
+  socket.on('userleave', function(msg){
+          $('#userinfo').append($('<li>').text(msg));
+  });
+
+  socket.on('location',function(msg){
+      console.dir(msg);
+     // console.dir(msg);
+     // console.dir(pos);
+       var marker2 = new google.maps.Marker({
+    position: msg,
+    map: map,
+    title: 'Hello World!',
+    animation:google.maps.Animation.BOUNCE
+  });
+     
+      // console.dir(msg == fix);
+       
+  });
+  </script>
+
+			<!-- End Scripts -->
+
+
+
+
+	
+</html>

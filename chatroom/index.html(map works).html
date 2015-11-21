@@ -1,0 +1,236 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <!-- Latest compiled and minified CSS -->
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>  
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" integrity="sha384-aUGj/X2zp5rLCbBxumKTCw2Z50WgIr1vs/PFN4praOTvYXWlVyh2UtNUU0KAUhAX" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+    <!-- jQuery -->
+  <style>
+  body{
+    margin-top: 40px;
+  }
+  ul{
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  </style>
+  </head>
+  <body onload="initGeolocation();">
+    <div class="container">
+    <div class="row">
+    <div class="col-xs-3">
+      <div>
+        user count : <span id='usercount'></span>
+        <ul id="userinfo"></ul>
+      </div>
+      <br>
+  </div>
+      <div class="col-xs-9">
+<div id="map_canvas" style="width:1000px;height:800px;margin:auto"></div>    </div>
+    </div>
+    <br>
+    <br>
+    <div class="row">
+      <div class="col-xs-offset-3">
+        <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+    <ul id="messages"></ul>
+  </div>
+</div>
+
+
+
+
+
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+        <script src="http://code.jquery.com/jquery-1.11.1.js"></script>	
+	<script>
+     var coords;
+     var fix;
+var myLatLng = {lat: -25.363, lng: 131.044};
+var s = {lat: -25, lng:131};
+var map;
+  function initMap() {
+  
+
+   map = new google.maps.Map(document.getElementById('map_canvas'), {
+    zoom: 4,
+    center: myLatLng
+  });
+
+  
+}
+  
+
+    // function initGeolocation()
+    // {
+    //         if( navigator.geolocation )
+    //         {
+    //           // Call getCurrentPosition with success and failure callbacks
+    //           navigator.geolocation.getCurrentPosition( success, fail );
+    //     }
+    //     else
+    //     {
+    //           alert("Sorry, your browser does not support geolocation services.");
+    //     }
+    // }
+     
+    //  function success(position)
+    //  {  
+    //        // Define the coordinates as a Google Maps LatLng Object
+    //        coords = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+    //        // console.dir("h"+coords);
+    //    fix = new google.maps.LatLng(position.coords.latitude+1, position.coords.longitude+1);   
+    //        // Prepare the map options
+          
+    //         // Create the map, and place it in the map_canvas div
+            
+      
+    //         // Place the initial marker
+    //         // var marker = new google.maps.Marker({
+    //         //           position: coords,
+    //         //           map: map,
+    //         //           title: "Your current location!",
+    //         // animation:google.maps.Animation.BOUNCE
+    //         // });
+    //         //  var marker2 = new google.maps.Marker({
+    //         //           position: fix,
+    //         //           map: map,
+    //         //           title: "Your current location!",
+    //         // animation:google.maps.Animation.BOUNCE
+    //         // });fix = {lat: -25.363, lng: 131.044};
+    //    // map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+     
+      
+    //     }
+    //      function fail()
+    //     {
+    //           // Could not obtain location
+    //     }
+       
+    
+    // //Request places from Google
+    // function placesRequest(title,latlng,radius,types,icon)
+    // {
+    //   //Parameters for our places request
+    //   var request = {
+    //     location: latlng,
+    //     radius: radius,
+    //     types: types
+    //   };
+    //   //Make the service call to google
+    //   var callPlaces = new google.maps.places.PlacesService(map);
+    //   callPlaces.search(request, function(results,status){
+    //     //trace what Google gives us back
+    //     $.each(results, function(i,place){
+    //       var placeLoc = place.geometry.location;
+    //        var thisplace = new google.maps.Marker({
+    //          map: map,
+    //          position: place.geometry.location,
+    //          icon: icon,
+    //          title: place.name
+    //        });
+    //     })
+    //   });     
+    // }
+               
+
+	  var socket = io();
+	  
+
+    
+
+    socket.emit('location',fix);
+
+    $('form').submit(function(){
+    var today = new Date();
+    var hh = today.getHours();
+    var mm = today.getMinutes(); //January is 0!
+    var ss = today.getSeconds();
+
+    today = hh+':'+mm+':'+ss;
+    		socket.emit('chat message', today + " " + $('#m').val());
+    		$('#m').val('');
+
+    		return false;
+  	});
+
+	socket.on('chat message', function(msg){
+		$('#messages').append($('<li>').text(msg));
+	});
+
+  socket.on('userCount',function(msg){
+    $('#usercount').text(msg.userCount);
+  });
+
+  socket.on('newuser',function(msg){
+          $('#userinfo').append($('<li>').text(msg.msg));
+  });
+  socket.on('userleave', function(msg){
+          $('#userinfo').append($('<li>').text(msg));
+  });
+  // console.dir(map);
+   // $(document).ready(function(){
+   //       var   mapOptions =
+   //        {
+   //                    zoom: 14,
+   //                    center: coords,
+   //                    mapTypeControl: false,
+   //                    navigationControlOptions: {style: google.maps.NavigationControlStyle.SMALL},
+   //                    mapTypeId: google.maps.MapTypeId.ROADMAP
+   //          };
+
+   //      var map = new google.maps.Map(document.getElementById('map_canvas'), mapOptions);
+
+   //      var marker = new google.maps.Marker({
+   //                    position: coords,
+   //                    map: map,
+   //                    title: "Your current location!",
+   //          animation:google.maps.Animation.BOUNCE
+   //          });
+   //       var marker2 = new google.maps.Marker({
+   //                    position: fix,
+   //                    map:map,
+   //                    title: "Your current 2location!",
+   //          animation:google.maps.Animation.BOUNCE
+
+   //          });
+   //     });
+
+
+  socket.on('location',function(msg){
+      // console.dir(msg);
+     
+     var marker = new google.maps.Marker({
+    position: myLatLng,
+    map: map,
+    title: 'Hello World!'
+  });
+       var marker2 = new google.maps.Marker({
+    position: s,
+    map: map,
+    title: 'Hello World!'
+  });
+     
+      // console.dir(msg == fix);
+       
+  });
+	</script>
+  <script async defer
+        src="https://maps.googleapis.com/maps/api/js?callback=initMap"></script>
+
+  </body>
+</html>
